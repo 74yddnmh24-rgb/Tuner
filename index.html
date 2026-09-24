@@ -1,154 +1,198 @@
-<!doctype html>
-<html lang="ru">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="theme-color" content="#05040B">
 <title>Cosmic Tuner</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&family=IBM+Plex+Mono:wght@300;400&family=Jost:wght@400;500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@200;300;400&family=Manrope:wght@300;400;500;600&display=swap">
 <style>
-body{margin:0}
 :root{
   color-scheme:dark;
-  --void:#05040B;
-  --indigo:#0E0B2A;
-  --violet:#7B5CFF;
-  --blue:#4FB3FF;
-  --silver:#C3C7D6;
-  --white:#F4F3FF;
-  --dim:rgba(195,199,214,.58);
-  --faint:rgba(195,199,214,.16);
-  --display:'Cormorant Garamond','Cormorant',Georgia,'Times New Roman',serif;
-  --ui:'Jost','Futura','Avenir Next',system-ui,sans-serif;
-  --mono:'IBM Plex Mono',ui-monospace,'SF Mono',Menlo,monospace;
+  --void:#04030A;
+  --ink:#0B0A24;
+  --violet:#8A6CFF;
+  --blue:#5CC8FF;
+  --silver:#BFC3D4;
+  --white:#F5F4FF;
+  --champ:#E8D6AE;
+  --dim:rgba(191,195,212,.55);
+  --hair:rgba(191,195,212,.16);
+  --display:'Unbounded','Futura','Avenir Next',system-ui,sans-serif;
+  --ui:'Manrope','Avenir Next',system-ui,sans-serif;
 }
 html,body{height:100%}
 [hidden]{display:none!important}
 body{
   background:
-    radial-gradient(120% 80% at 50% 70%, #151040 0%, #0A0823 42%, var(--void) 100%);
+    radial-gradient(90% 60% at 50% 72%, rgba(40,28,110,.55) 0%, rgba(12,10,40,.0) 70%),
+    radial-gradient(140% 90% at 50% 100%, #0D0B2C 0%, #070619 45%, var(--void) 100%);
   background-color:var(--void);
   color:var(--white);
   font-family:var(--ui);
   overflow:hidden;
   -webkit-tap-highlight-color:transparent;
+  -webkit-user-select:none;user-select:none;
 }
 #sky{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:manipulation}
 .app{
   position:relative;height:100%;
   display:grid;grid-template-rows:auto auto 1fr auto;
-  max-width:980px;margin:0 auto;
+  max-width:760px;margin:0 auto;
   padding-inline:max(16px, env(safe-area-inset-left, 0px));
   pointer-events:none;
 }
 .app button{pointer-events:auto}
 
-.top{display:flex;justify-content:space-between;align-items:center;padding-block:18px 6px}
-.mark{font:500 11px/1 var(--ui);letter-spacing:.44em;color:var(--silver)}
-.a4{
-  background:none;border:0;color:var(--dim);cursor:pointer;
-  font:400 12px/1 var(--mono);letter-spacing:.04em;padding:8px 0 8px 12px;
-}
-.a4 sub{font-size:.75em}
-.a4:hover{color:var(--white)}
+/* header */
+.top{display:flex;justify-content:space-between;align-items:center;padding-block:20px 0}
+.mark{font:500 10px/1 var(--ui);letter-spacing:.5em;color:var(--silver)}
+.pips{display:flex;gap:7px}
+.pips i{width:5px;height:5px;border-radius:50%;box-shadow:inset 0 0 0 1px rgba(191,195,212,.35);transition:background .6s, box-shadow .6s}
+.pips i.on{background:var(--champ);box-shadow:0 0 8px rgba(232,214,174,.9)}
 
-.readout{height:clamp(170px,28vh,236px);display:grid;place-items:center;text-align:center;overflow:hidden}
-.readout > div{display:grid;justify-items:center;gap:10px}
-.big{margin:0;font:300 clamp(34px,7vw,56px)/1.02 var(--display);text-wrap:balance;letter-spacing:.005em}
-.big em{font-style:italic;color:#CFC6FF}
-.sub{margin:0;max-width:40ch;font:400 14px/1.55 var(--ui);color:var(--dim);text-wrap:balance}
+/* dial */
+.readout{display:grid;place-items:center;padding-block:10px 0}
+.dial{position:relative;width:min(330px,88vw);aspect-ratio:300/170;max-width:100%}
+.dial svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+.dial .arc{fill:none;stroke:rgba(191,195,212,.18);stroke-width:1}
+.dial .tk{stroke:rgba(191,195,212,.28);stroke-width:1}
+.dial .tk.mj{stroke:rgba(191,195,212,.5)}
+.dial .acc{font:400 11px var(--ui);fill:rgba(191,195,212,.5)}
+#arcOn{fill:none;stroke:url(#gOn);stroke-width:2;stroke-linecap:round;transition:stroke .4s}
+#needle{transition:opacity .5s}
+.dial.ok #arcOn{stroke:var(--champ)}
+.dial.ok .arc{stroke:rgba(232,214,174,.45)}
+.dial.done .arc{stroke:rgba(232,214,174,.55);filter:drop-shadow(0 0 6px rgba(232,214,174,.6))}
+.dial.done .tk{stroke:rgba(232,214,174,.45)}
+.dial.idle #needle{opacity:0}
 
-.note{font:300 clamp(76px,15vw,124px)/.86 var(--display);letter-spacing:-.01em}
-.note sub{font-size:.3em;vertical-align:baseline;margin-left:.06em;color:var(--dim)}
-.hz{font:300 15px/1 var(--mono);color:var(--silver);font-variant-numeric:tabular-nums;display:flex;gap:8px;align-items:baseline}
-.hz .u,.hz .sep{color:var(--dim)}
-.meter{position:relative;width:min(260px,70vw);height:16px;margin-top:2px}
-.meter::before{content:"";position:absolute;left:0;right:0;top:50%;height:1px;background:var(--faint)}
-.meter i{position:absolute;top:4px;width:1px;height:8px;background:var(--faint)}
-.meter i.c{top:0;height:16px;background:rgba(244,243,255,.5)}
-.meter b{
-  position:absolute;top:50%;left:50%;width:9px;height:9px;border-radius:50%;
-  transform:translate(-50%,-50%);background:var(--blue);
-  box-shadow:0 0 10px var(--blue),0 0 26px rgba(79,179,255,.5);
-  transition:background .3s, box-shadow .3s;
-}
-.meter b.ok{background:#fff;box-shadow:0 0 12px #fff,0 0 34px rgba(123,92,255,.8)}
-.state{font:500 11px/1 var(--ui);letter-spacing:.3em;text-transform:uppercase;color:var(--dim)}
-.state.ok{color:var(--white)}
+.center{position:absolute;left:0;right:0;bottom:0;display:grid;justify-items:center;text-align:center}
+.center > div{display:grid;justify-items:center;gap:10px}
+.note{font:200 clamp(64px,17vw,92px)/.9 var(--display);letter-spacing:-.02em;color:var(--white);text-shadow:0 0 40px rgba(138,108,255,.35)}
+.note sub{font-size:.26em;font-weight:300;vertical-align:baseline;margin-left:.08em;color:var(--dim);letter-spacing:0}
+.state{font:600 10px/1 var(--ui);letter-spacing:.42em;text-transform:uppercase;color:var(--dim);padding-left:.42em;transition:color .3s}
+.state.ok{color:var(--champ);text-shadow:0 0 14px rgba(232,214,174,.6)}
+.intro .l1{font:200 clamp(24px,6.4vw,32px)/1.1 var(--display);letter-spacing:.02em}
+.intro .l2{font:200 clamp(24px,6.4vw,32px)/1.1 var(--display);letter-spacing:.02em;
+  background:linear-gradient(90deg,#CFC8FF,var(--champ));-webkit-background-clip:text;background-clip:text;color:transparent}
+.intro{gap:4px!important;padding-bottom:8px}
+.res{font:300 clamp(20px,5.6vw,26px)/1 var(--display);letter-spacing:.34em;padding-left:.34em;
+  background:linear-gradient(90deg,#DCD6FF 0%,#FFFFFF 45%,var(--champ) 100%);-webkit-background-clip:text;background-clip:text;color:transparent}
+.sub{margin:0;max-width:30ch;font:400 13px/1.55 var(--ui);color:var(--dim);text-wrap:balance}
 
 #field{min-height:0}
 
-.controls{display:grid;justify-items:center;gap:10px;padding-block:10px max(20px, env(safe-area-inset-bottom, 0px))}
-.row{display:flex;flex-wrap:wrap;justify-content:center;gap:10px}
-.btn{
-  appearance:none;cursor:pointer;
-  font:500 11px/1 var(--ui);letter-spacing:.24em;text-transform:uppercase;
-  color:var(--white);
-  background:rgba(14,11,42,.55);
-  -webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);
-  border:1px solid rgba(195,199,214,.22);
-  border-radius:999px;padding:14px 20px;
-  transition:border-color .25s, box-shadow .25s, color .25s;
+/* controls */
+.controls{display:grid;justify-items:center;gap:12px;padding-block:6px max(22px, env(safe-area-inset-bottom, 0px))}
+.bar{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:24px;width:100%;max-width:420px}
+.chip{
+  justify-self:end;display:inline-flex;align-items:center;gap:10px;height:40px;padding:0 16px 0 14px;
+  border-radius:999px;border:0;cursor:pointer;color:var(--silver);
+  background:rgba(11,10,36,.5);box-shadow:inset 0 0 0 1px var(--hair);
+  -webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);
+  font:600 10px/1 var(--ui);letter-spacing:.3em;text-transform:uppercase;
 }
-.btn:hover{border-color:rgba(195,199,214,.5)}
-.btn.primary{border-color:rgba(79,179,255,.55);box-shadow:inset 0 0 22px rgba(79,179,255,.16),0 0 22px rgba(79,179,255,.1)}
-.btn.primary.on{border-color:rgba(123,92,255,.8);box-shadow:inset 0 0 22px rgba(123,92,255,.3),0 0 26px rgba(123,92,255,.25)}
-.btn.ghost{background:transparent;color:var(--silver)}
-.btn:disabled{opacity:.4;cursor:default}
-.btn:focus-visible,.a4:focus-visible{outline:1px solid var(--blue);outline-offset:3px}
-.msg{margin:0;max-width:52ch;text-align:center;font:400 12px/1.5 var(--ui);color:var(--dim);text-wrap:balance;min-height:1.5em}
-.msg.warn{color:#E6DCFF}
+.chip .dot{width:6px;height:6px;border-radius:50%;background:var(--blue);box-shadow:0 0 10px var(--blue)}
+.chip.manual .dot{background:var(--champ);box-shadow:0 0 10px var(--champ)}
+.chip.manual{color:var(--white)}
+.icon{
+  justify-self:start;width:40px;height:40px;border-radius:50%;border:0;cursor:pointer;display:grid;place-items:center;
+  background:rgba(11,10,36,.5);box-shadow:inset 0 0 0 1px var(--hair);color:var(--silver);
+  -webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);
+}
+.icon svg{width:16px;height:16px}
+.chip:hover,.icon:hover{box-shadow:inset 0 0 0 1px rgba(191,195,212,.4)}
 
-@media (max-width:420px){
-  .row{gap:6px}
-  .btn{padding:12px 12px;letter-spacing:.12em;font-size:10px}
+.orb{
+  --lvl:0;
+  position:relative;width:84px;height:84px;border-radius:50%;border:0;padding:0;cursor:pointer;
+  background:radial-gradient(circle at 50% 38%, rgba(138,108,255,.32), rgba(11,10,36,.94) 64%);
+  box-shadow:inset 0 0 0 1px rgba(191,195,212,.22), inset 0 -10px 24px rgba(92,200,255,.08), 0 14px 40px rgba(0,0,0,.55);
+}
+.orb .ring{
+  position:absolute;inset:-7px;border-radius:50%;
+  background:conic-gradient(from 0deg, transparent 0 12%, rgba(92,200,255,.95) 24%, transparent 36%, transparent 52%, rgba(138,108,255,.95) 68%, transparent 80%, rgba(232,214,174,.7) 90%, transparent 97%);
+  -webkit-mask:radial-gradient(farthest-side, transparent calc(100% - 1.5px), #000 calc(100% - 1px));
+          mask:radial-gradient(farthest-side, transparent calc(100% - 1.5px), #000 calc(100% - 1px));
+  opacity:.3;transition:opacity .5s;
+}
+.orb.on .ring{opacity:1;animation:spin 6s linear infinite}
+.orb .halo{
+  position:absolute;inset:-7px;border-radius:50%;pointer-events:none;
+  box-shadow:0 0 34px rgba(138,108,255,.55),0 0 70px rgba(92,200,255,.22);
+  opacity:.15;transform:scale(1);
+}
+.orb.on .halo{opacity:calc(.3 + var(--lvl) * .7);transform:scale(calc(1 + var(--lvl) * .16))}
+.orb .core{
+  position:absolute;left:50%;top:50%;width:10px;height:10px;margin:-5px;border-radius:50%;
+  background:#fff;box-shadow:0 0 12px #fff,0 0 30px rgba(138,108,255,.9);
+  animation:breathe 3.2s ease-in-out infinite;
+}
+.orb.on .core{animation:none;transform:scale(calc(.9 + var(--lvl) * 1.6))}
+.orb-label{font:600 9px/1 var(--ui);letter-spacing:.46em;padding-left:.46em;text-transform:uppercase;color:var(--dim)}
+.msg{margin:0;max-width:40ch;text-align:center;font:400 12px/1.5 var(--ui);color:var(--dim);text-wrap:balance;min-height:1.5em}
+.chip:focus-visible,.icon:focus-visible,.orb:focus-visible{outline:1px solid var(--blue);outline-offset:4px}
+
+@keyframes spin{to{transform:rotate(1turn)}}
+@keyframes breathe{0%,100%{transform:scale(.7);opacity:.75}50%{transform:scale(1);opacity:1}}
+@media (prefers-reduced-motion:reduce){
+  .orb.on .ring,.orb .core{animation:none}
+}
+@media (max-height:700px){
+  .dial{width:min(270px,76vw)}
+  .orb{width:72px;height:72px}
 }
 </style>
-</head>
-<body>
 
 <canvas id="sky" aria-label="Шесть струн гитары в виде световых линий. Настроенная струна становится звездой созвездия Орион."></canvas>
 
 <div class="app">
   <header class="top">
     <div class="mark">COSMIC&nbsp;TUNER</div>
-    <button class="a4" id="a4" type="button" title="Эталонная частота ноты ля">A<sub>4</sub> = <span id="a4v">440</span> Hz</button>
+    <div class="pips" id="pips" role="img" aria-label="Настроено 0 из 6"><i></i><i></i><i></i><i></i><i></i><i></i></div>
   </header>
 
   <section class="readout" aria-live="polite">
-    <div id="intro">
-      <p class="big">Шесть струн.<br><em>Семь звёзд.</em></p>
-      <p class="sub">Настройте струну, и она станет звездой Ориона. Когда в строю все шесть, родится седьмая.</p>
-    </div>
-    <div id="live" hidden>
-      <div class="note"><span id="nName">E</span><sub id="nOct">2</sub></div>
-      <div class="hz"><span id="hz">82.4</span><span class="u">Hz</span><span class="sep">·</span><span id="cents">0 ¢</span></div>
-      <div class="meter" aria-hidden="true">
-        <i style="left:0"></i><i style="left:25%"></i><i class="c" style="left:50%"></i><i style="left:75%"></i><i style="left:100%"></i>
-        <b id="dot"></b>
+    <div class="dial idle" id="dial">
+      <svg viewBox="0 0 300 170" aria-hidden="true">
+        <defs>
+          <linearGradient id="gOn" x1="0" x2="1">
+            <stop offset="0" stop-color="#8A6CFF"/><stop offset="1" stop-color="#5CC8FF"/>
+          </linearGradient>
+          <radialGradient id="gGlow">
+            <stop offset="0" stop-color="#fff" stop-opacity=".9"/>
+            <stop offset=".35" stop-color="#8A6CFF" stop-opacity=".45"/>
+            <stop offset="1" stop-color="#8A6CFF" stop-opacity="0"/>
+          </radialGradient>
+        </defs>
+        <g id="ticks"></g>
+        <path class="arc" id="arcBase"></path>
+        <path id="arcOn"></path>
+        <g id="needle"><circle r="13" fill="url(#gGlow)"></circle><circle r="3.2" fill="#fff"></circle></g>
+      </svg>
+      <div class="center">
+        <div class="intro" id="intro"><div class="l1">Шесть струн</div><div class="l2">Семь звёзд</div></div>
+        <div id="live" hidden>
+          <div class="note"><span id="nName">E</span><sub id="nOct">2</sub></div>
+          <div class="state" id="state">Слушаю</div>
+        </div>
+        <div id="done" hidden>
+          <div class="res">RESONANCE</div>
+          <p class="sub">Шесть струн в гармонии. Из неё родилась седьмая звезда, Альнилам.</p>
+        </div>
       </div>
-      <div class="state" id="state">Слушаю</div>
-    </div>
-    <div id="done" hidden>
-      <p class="big"><em>Резонанс</em></p>
-      <p class="sub">Шесть струн настроены. Из их гармонии родилась седьмая звезда: Альнилам, центр пояса Ориона.</p>
     </div>
   </section>
 
   <div id="field"></div>
 
   <footer class="controls">
-    <div class="row">
-      <button class="btn primary" id="listen" type="button">Слушать</button>
-      <button class="btn" id="demo" type="button">Демо</button>
-      <button class="btn ghost" id="mode" type="button" title="Выбор струны: авто или вручную">Авто</button>
-      <button class="btn ghost" id="reset" type="button">Сброс</button>
+    <div class="bar">
+      <button class="chip" id="mode" type="button" title="Струна определяется автоматически. Коснитесь струны на экране, чтобы выбрать её вручную."><i class="dot"></i><span id="modeTxt">Авто</span></button>
+      <button class="orb" id="listen" type="button" aria-label="Слушать"><span class="halo"></span><span class="ring"></span><span class="core"></span></button>
+      <button class="icon" id="reset" type="button" aria-label="Начать заново" title="Начать заново">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"><path d="M4.5 12a7.5 7.5 0 1 0 2.2-5.3"/><path d="M4.5 4.5v3.2h3.2"/></svg>
+      </button>
     </div>
-    <p class="msg" id="msg">Коснитесь струны, чтобы услышать эталонный тон</p>
+    <div class="orb-label" id="orbLabel">Слушать</div>
+    <p class="msg" id="msg">Коснитесь сферы и дёрните струну</p>
   </footer>
 </div>
 
@@ -157,8 +201,10 @@ body{
 const $ = id => document.getElementById(id);
 const cv = $('sky'), ctx = cv.getContext('2d');
 const RM = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const TAU = Math.PI * 2;
 
 /* ---------- Model ---------- */
+const A4 = 440;
 const STR = [
   {n:1, name:'E', oct:4, semi:-5,  star:'Bellatrix'},
   {n:2, name:'B', oct:3, semi:-10, star:'Betelgeuse'},
@@ -169,27 +215,64 @@ const STR = [
 ];
 // Orion as seen from the northern hemisphere. Betelgeuse is a red supergiant, Rigel blue-white.
 const STARS = {
-  Betelgeuse:{x:.26, y:.13, r:1.25, c:'255,176,120', ru:'Бетельгейзе'},
-  Bellatrix: {x:.74, y:.20, r:.95,  c:'214,226,255', ru:'Беллатрикс'},
-  Mintaka:   {x:.61, y:.50, r:.82,  c:'210,224,255', ru:'Минтака'},
-  Alnilam:   {x:.505,y:.535,r:1.08, c:'226,234,255', ru:'Альнилам'},
-  Alnitak:   {x:.40, y:.575,r:.9,   c:'210,224,255', ru:'Альнитак'},
-  Saiph:     {x:.32, y:.89, r:.9,   c:'202,220,255', ru:'Саиф'},
-  Rigel:     {x:.76, y:.84, r:1.2,  c:'178,206,255', ru:'Ригель'},
+  Betelgeuse:{x:.26, y:.13, r:1.3,  c:'255,172,112', ru:'Бетельгейзе', dx:-20, dy:16, al:'right'},
+  Bellatrix: {x:.74, y:.20, r:.95,  c:'214,226,255', ru:'Беллатрикс',  dx:20,  dy:16, al:'left'},
+  Mintaka:   {x:.61, y:.50, r:.82,  c:'210,224,255', ru:'Минтака',     dx:20,  dy:-12, al:'left'},
+  Alnilam:   {x:.505,y:.535,r:1.1,  c:'226,234,255', ru:'Альнилам',    dx:0,   dy:-26, al:'center'},
+  Alnitak:   {x:.40, y:.575,r:.92,  c:'210,224,255', ru:'Альнитак',    dx:-20, dy:14, al:'right'},
+  Saiph:     {x:.32, y:.89, r:.9,   c:'202,220,255', ru:'Саиф',        dx:-20, dy:8,  al:'right'},
+  Rigel:     {x:.76, y:.84, r:1.25, c:'176,206,255', ru:'Ригель',      dx:20,  dy:8,  al:'left'},
 };
+// Orion's sword with the Great Nebula (M42) hanging below the belt
+const SWORD = [{x:.487,y:.645,r:.45},{x:.492,y:.705,r:.6},{x:.497,y:.765,r:.45}];
+const M42 = {x:.492, y:.705};
 const LINKS = [['Betelgeuse','Bellatrix'],['Betelgeuse','Alnitak'],['Bellatrix','Mintaka'],
   ['Mintaka','Alnilam'],['Alnilam','Alnitak'],['Alnitak','Saiph'],['Mintaka','Rigel']];
 
-let A4 = 440;
-const A4S = [440, 442, 432, 444];
 const freqOf = s => A4 * Math.pow(2, s.semi / 12);
-STR.forEach((s, i) => Object.assign(s, {i, off:0, en:0, cents:0, locked:false, col:0, hold:0, flash:0}));
+STR.forEach((s, i) => Object.assign(s, {i, off:0, en:0, cents:0, locked:false, col:0, hold:0, birth:0}));
 
 let field = null;
 let active = null, manual = null;
 let hist = [], curF = 0, lastSig = -1e9, dispC = 0;
 let complete = false, cp = 0, completeAt = 0;
 let ignoreUntil = 0;
+
+/* ---------- Dial (SVG) ---------- */
+const NS = 'http://www.w3.org/2000/svg';
+const DC = {cx:150, cy:160, R:132, span:62};
+const dpt = (c, r) => { const th = (c / 50) * DC.span * Math.PI / 180; return [DC.cx + r * Math.sin(th), DC.cy - r * Math.cos(th)]; };
+(function buildDial(){
+  const g = $('ticks');
+  for (let c = -50; c <= 50; c += 5){
+    const mj = c % 25 === 0, len = c === 0 ? 16 : mj ? 10 : 5;
+    const [x1, y1] = dpt(c, DC.R - len), [x2, y2] = dpt(c, DC.R);
+    const l = document.createElementNS(NS, 'line');
+    l.setAttribute('x1', x1); l.setAttribute('y1', y1); l.setAttribute('x2', x2); l.setAttribute('y2', y2);
+    l.setAttribute('class', 'tk' + (mj ? ' mj' : ''));
+    g.appendChild(l);
+  }
+  // diamond marker at the centre
+  const [mx, my] = dpt(0, DC.R + 9);
+  const d = document.createElementNS(NS, 'path');
+  d.setAttribute('d', `M${mx} ${my - 3.5} L${mx + 3.5} ${my} L${mx} ${my + 3.5} L${mx - 3.5} ${my}Z`);
+  d.setAttribute('fill', 'rgba(232,214,174,.8)'); g.appendChild(d);
+  for (const [c, ch] of [[-58, '♭'], [58, '♯']]){
+    const [x, y] = dpt(c, DC.R - 2);
+    const t = document.createElementNS(NS, 'text');
+    t.setAttribute('x', x); t.setAttribute('y', y + 4); t.setAttribute('text-anchor', 'middle');
+    t.setAttribute('class', 'acc'); t.textContent = ch; g.appendChild(t);
+  }
+  const [ax, ay] = dpt(-50, DC.R), [bx, by] = dpt(50, DC.R);
+  $('arcBase').setAttribute('d', `M${ax} ${ay} A${DC.R} ${DC.R} 0 0 1 ${bx} ${by}`);
+})();
+function setNeedle(c){
+  c = Math.max(-50, Math.min(50, c));
+  const [x, y] = dpt(c, DC.R), [ox, oy] = dpt(0, DC.R);
+  $('needle').setAttribute('transform', `translate(${x.toFixed(2)} ${y.toFixed(2)})`);
+  $('arcOn').setAttribute('d', Math.abs(c) < .3 ? '' : `M${ox} ${oy} A${DC.R} ${DC.R} 0 0 ${c > 0 ? 1 : 0} ${x.toFixed(2)} ${y.toFixed(2)}`);
+}
+setNeedle(0);
 
 /* ---------- Layout ---------- */
 function resize(){
@@ -200,12 +283,16 @@ function resize(){
   const r = $('field').getBoundingClientRect();
   const gap = r.height / (STR.length + 1);
   field = {x:r.left, y:r.top, w:r.width, h:r.height, gap, W, H};
-  field.x0 = r.left + (r.width < 520 ? 46 : 66);
+  field.x0 = r.left + 34;
   field.x1 = r.right;
   STR.forEach((s, i) => s.y = r.top + gap * (i + 1));
-  const bh = r.height * .9, bw = Math.min((field.x1 - field.x0) * .82, bh * .78);
+  const bh = r.height * .9, bw = Math.min((field.x1 - field.x0) * .8, bh * .76);
   const bx = field.x0 + (field.x1 - field.x0 - bw) / 2, by = r.top + (r.height - bh) / 2;
-  for (const k in STARS){ const st = STARS[k]; st.px = bx + st.x * bw; st.py = by + st.y * bh; }
+  field.box = {bx, by, bw, bh};
+  const place = o => { o.px = bx + o.x * bw; o.py = by + o.y * bh; };
+  for (const k in STARS) place(STARS[k]);
+  SWORD.forEach(place); place(M42);
+  field.orbit = Math.min(bh * .56, (field.x1 - field.x0) * .5);
 }
 addEventListener('resize', resize);
 if ('ResizeObserver' in window) new ResizeObserver(resize).observe($('field'));
@@ -219,7 +306,7 @@ function audio(){
     const comp = ac.createDynamicsCompressor();
     master.connect(comp); comp.connect(ac.destination);
   }
-  if (ac.state === 'suspended') ac.resume();
+  if (ac.state !== 'running') ac.resume().catch(() => {});
   return ac;
 }
 const ksCache = {};
@@ -234,17 +321,12 @@ function ksBuffer(f){
   if (pk) for (let i = 0; i < len; i++) d[i] /= pk;
   return (ksCache[P] = {b, P});
 }
-// Plucked string (Karplus–Strong). Optional cents curve glides the pitch.
-function pluck(f, {when = 0, gain = .5, curve = null, dur = 3.2} = {}){
+function pluck(f, {when = 0, gain = .5, dur = 3.2} = {}){
   audio();
   const {b, P} = ksBuffer(f);
   const src = ac.createBufferSource(); src.buffer = b;
-  const base = f * (P + .5) / ac.sampleRate, t = ac.currentTime + when;
-  if (curve){
-    const arr = new Float32Array(curve.length);
-    curve.forEach((c, i) => arr[i] = base * Math.pow(2, c / 1200));
-    src.playbackRate.setValueCurveAtTime(arr, t, dur);
-  } else src.playbackRate.value = base;
+  const t = ac.currentTime + when;
+  src.playbackRate.value = f * (P + .5) / ac.sampleRate;
   const lp = ac.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = Math.min(7000, f * 16);
   const g = ac.createGain();
   g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(gain, t + .004);
@@ -255,23 +337,24 @@ function pluck(f, {when = 0, gain = .5, curve = null, dur = 3.2} = {}){
 function chime(f, gain = .06, when = 0){
   audio();
   const t = ac.currentTime + when;
-  [[2, 1], [4.008, .45], [6.02, .18]].forEach(([m, a]) => {
+  [[2, 1], [4.008, .45], [6.02, .18], [8.03, .08]].forEach(([m, a]) => {
     const o = ac.createOscillator(); o.type = 'sine'; o.frequency.value = f * m;
     const g = ac.createGain();
     g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(gain * a, t + .03);
-    g.gain.exponentialRampToValueAtTime(.0001, t + 2.8);
-    o.connect(g); g.connect(master); o.start(t); o.stop(t + 3);
+    g.gain.exponentialRampToValueAtTime(.0001, t + 3.2);
+    o.connect(g); g.connect(master); o.start(t); o.stop(t + 3.4);
   });
 }
 
 /* ---------- Pitch detection (YIN) ---------- */
 let an = null, buf = null, micOn = false, stream = null, yd = null, wake = null;
-let peak = 0, peakT = 0;
+let peak = 0, peakT = 0, lvl = 0;
+const GATE = .0015;
 function yin(x, sr){
   const N = x.length, Wn = N >> 1;
   let rms = 0; for (let i = 0; i < N; i++) rms += x[i] * x[i];
   rms = Math.sqrt(rms / N);
-  if (rms < .003) return {f:0, rms};
+  if (rms < GATE) return {f:0, rms};
   const minT = Math.floor(sr / 1100), maxT = Math.min(Wn - 2, Math.floor(sr / 62));
   if (!yd || yd.length < maxT + 2) yd = new Float32Array(maxT + 2);
   yd[0] = 1; let run = 0;
@@ -284,7 +367,7 @@ function yin(x, sr){
   for (let t = minT; t <= maxT; t++){
     if (yd[t] < .15){ while (t + 1 <= maxT && yd[t + 1] < yd[t]) t++; T = t; break; }
   }
-  if (T < 0){ // no clear dip: accept the deepest one if it is reasonably periodic
+  if (T < 0){
     let m = 1e9; for (let t = minT; t <= maxT; t++) if (yd[t] < m){ m = yd[t]; T = t; }
     if (m > .35) T = -1;
   }
@@ -299,31 +382,27 @@ async function startMic(){
   try {
     stream = await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false, noiseSuppression:false, autoGainControl:false}});
   } catch (e){ micFail(); return; }
-  // iOS: the context can be suspended/interrupted once the mic session starts
   try { if (ac.state !== 'running') await ac.resume(); } catch (e){}
   const src = ac.createMediaStreamSource(stream);
   an = ac.createAnalyser(); an.fftSize = 4096; src.connect(an);
-  // WebKit only pulls nodes that reach the destination: route through a silent gain
   const mute = ac.createGain(); mute.gain.value = 0; an.connect(mute); mute.connect(ac.destination);
-  peak = 0; peakT = performance.now();
   buf = new Float32Array(an.fftSize);
-  micOn = true; stopDemo();
-  $('listen').classList.add('on'); $('listen').textContent = 'Слушаю';
-  say('Дёрните открытую струну. Струна ниже строя сияет под своей линией, выше строя — над ней.');
+  micOn = true; peak = 0; peakT = performance.now();
+  $('listen').classList.add('on'); $('orbLabel').textContent = 'Слушаю';
+  say('Дёрните открытую струну');
   try { if (navigator.wakeLock) wake = await navigator.wakeLock.request('screen'); } catch (e){}
 }
 function stopMic(){
-  micOn = false;
+  micOn = false; lvl = 0;
   if (stream) stream.getTracks().forEach(t => t.stop());
   stream = null; an = null;
-  $('listen').classList.remove('on'); $('listen').textContent = 'Слушать';
+  $('listen').classList.remove('on'); $('orbLabel').textContent = 'Слушать';
+  $('listen').style.setProperty('--lvl', 0);
   try { wake && wake.release(); } catch (e){} wake = null;
-  say('Микрофон выключен');
+  say('Коснитесь сферы и дёрните струну');
 }
-function micFail(){
-  say('Микрофон здесь недоступен. Откройте cosmic-tuner.html в Safari или Chrome и разрешите доступ. А пока можно включить демо.', true);
-}
-function say(t, warn){ const m = $('msg'); m.textContent = t; m.classList.toggle('warn', !!warn); }
+function micFail(){ say('Нет доступа к микрофону. Разрешите его в настройках Safari для этого сайта.'); }
+function say(t){ const m = $('msg'); if (m.textContent !== t) m.textContent = t; }
 
 const median = a => { const s = [...a].sort((x, y) => x - y); return s[s.length >> 1]; };
 const centsBetween = (f, g) => 1200 * Math.log2(f / g);
@@ -340,119 +419,85 @@ function feed(f, level, now){
   }
   curF = m; lastSig = now; active = s;
   s.cents = centsBetween(m, freqOf(s));
-  s.en = Math.min(1, s.en + level * 5 + .12);
+  s.en = Math.min(1, s.en + level * 12 + .12);
 }
 
 /* ---------- Locking & completion ---------- */
 function lock(s, now){
-  s.locked = true; s.col = .0001; s.hold = 0; s.flash = 0;
-  chime(freqOf(s), .055);
+  s.locked = true; s.col = .0001; s.hold = 0; s.birth = 0;
+  chime(freqOf(s), .05);
   try { navigator.vibrate && navigator.vibrate(18); } catch (e){}
   if (manual === s) setManual(null);
-  if (STR.every(x => x.locked)) completeAt = now + 1350;
+  updatePips();
+  if (STR.every(x => x.locked)) completeAt = now + 1400;
 }
 function finish(){
   complete = true; cp = 0;
-  STR.slice().reverse().forEach((s, k) => pluck(freqOf(s), {when: k * .075, gain: .32, dur: 3.2}));
-  chime(freqOf(STR[5]) * 2, .05, .9);
+  STR.slice().reverse().forEach((s, k) => pluck(freqOf(s), {when: k * .08, gain: .3, dur: 3.2}));
+  chime(freqOf(STR[5]) * 2, .045, .9);
+  chime(freqOf(STR[0]), .03, 1.4);
 }
 function resetAll(){
-  STR.forEach(s => Object.assign(s, {off:0, en:0, cents:0, locked:false, col:0, hold:0, flash:0}));
+  STR.forEach(s => Object.assign(s, {off:0, en:0, cents:0, locked:false, col:0, hold:0, birth:0}));
   complete = false; cp = 0; completeAt = 0; active = null; hist = []; lastSig = -1e9;
-  setManual(null); stopDemo();
+  setManual(null); updatePips();
 }
-
-/* ---------- Demo ---------- */
-let demo = null;
-const demoC = (c0, t) => c0 * Math.exp(-t * 1.25) * Math.cos(t * 1.9);
-const sleep = ms => new Promise(r => setTimeout(r, ms));
-async function runDemo(){
-  if (demo) return;
-  audio();
-  if (complete) resetAll();
-  setManual(null);
-  const token = {}; demo = token;
-  $('demo').disabled = true;
-  say('Демо: каждая струна входит в строй и становится звездой.');
-  for (const s of STR.slice().reverse()){
-    if (demo !== token) break;
-    if (s.locked) continue;
-    const c0 = (Math.random() < .5 ? -1 : 1) * (20 + Math.random() * 24);
-    const dur = 3.2, curve = [];
-    for (let i = 0; i < 64; i++) curve.push(demoC(c0, i / 63 * dur));
-    pluck(freqOf(s), {gain:.55, curve, dur});
-    token.cur = {s, c0, t0: performance.now(), dur};
-    const t0 = performance.now();
-    while (demo === token && !s.locked && performance.now() - t0 < 5000) await sleep(60);
-    await sleep(380);
-  }
-  if (demo === token){ demo = null; $('demo').disabled = false; say('Коснитесь струны, чтобы услышать эталонный тон'); }
+function updatePips(){
+  const n = STR.filter(s => s.locked).length;
+  [...$('pips').children].forEach((p, i) => p.classList.toggle('on', i < n));
+  $('pips').setAttribute('aria-label', `Настроено ${n} из 6`);
 }
-function stopDemo(){ if (demo){ demo = null; $('demo').disabled = false; } }
 
 /* ---------- Controls ---------- */
+const SUBS = '₀₁₂₃₄₅₆₇₈₉';
+const sub = n => String(n).split('').map(d => SUBS[+d]).join('');
 function setManual(s){
   manual = s;
-  $('mode').textContent = s ? `Струна ${s.n} · ${s.name}` : 'Авто';
+  $('mode').classList.toggle('manual', !!s);
+  $('modeTxt').textContent = s ? `${s.name}${sub(s.oct)}` : 'Авто';
 }
 $('listen').onclick = () => micOn ? stopMic() : startMic();
-$('demo').onclick = runDemo;
-$('reset').onclick = () => { resetAll(); say('Коснитесь струны, чтобы услышать эталонный тон'); };
+$('reset').onclick = () => { resetAll(); say(micOn ? 'Дёрните открытую струну' : 'Коснитесь сферы и дёрните струну'); };
 $('mode').onclick = () => setManual(null);
-$('a4').onclick = () => {
-  A4 = A4S[(A4S.indexOf(A4) + 1) % A4S.length];
-  $('a4v').textContent = A4;
-  say(`Эталон: ля первой октавы = ${A4} Hz`);
-};
 cv.addEventListener('pointerdown', e => {
   if (!field) return;
   const x = e.clientX, y = e.clientY;
-  if (x < field.x - 8 || x > field.x1 + 8) return;
+  if (x < field.x - 8 || x > field.x1 + 8 || y < field.y || y > field.y + field.h) return;
   let s = null, bd = field.gap / 2;
   for (const k of STR){ const d = Math.abs(y - k.y); if (d < bd){ bd = d; s = k; } }
   if (!s) return;
-  audio(); stopDemo();
-  if (s.locked){ s.locked = false; s.col = 0; s.off = 0; complete = false; cp = 0; completeAt = 0; }
+  audio();
+  if (s.locked){ s.locked = false; s.col = 0; s.off = 0; s.birth = 0; complete = false; cp = 0; completeAt = 0; updatePips(); }
   setManual(s);
   active = s; s.en = Math.max(s.en, .6);
   pluck(freqOf(s), {gain:.5});
   ignoreUntil = performance.now() + 2600;
-  say(`Струна ${s.n}: ${s.name}${sub(s.oct)} · ${freqOf(s).toFixed(2)} Hz`);
+  say(`Струна ${s.n}. Звучит эталон`);
 });
-const SUBS = '₀₁₂₃₄₅₆₇₈₉';
-const sub = n => String(n).split('').map(d => SUBS[+d]).join('');
 
 /* ---------- Update ---------- */
 let frame = 0, uiT = 0;
 function update(dt, now){
   frame++;
-  if (micOn && an && !demo && now > ignoreUntil && frame % 2 === 0){
-    an.getFloatTimeDomainData(buf);
+  if (micOn && an && now > ignoreUntil && frame % 2 === 0){
     if (ac.state !== 'running') ac.resume().catch(() => {});
+    an.getFloatTimeDomainData(buf);
     const r = yin(buf, ac.sampleRate);
     peak = Math.max(peak, r.rms);
+    lvl += (Math.min(1, r.rms * 14) - lvl) * .35;
     if (r.f > 62 && r.f < 1100) feed(r.f, r.rms, now);
   }
-  // diagnostics: tell the player what the mic hears when no note is found
-  if (micOn && !demo && now - peakT > 1500){
-    if (now - lastSig > 1500){
-      if (peak < .003) say('Не слышу звука. Поднесите телефон ближе к гитаре, микрофоном к розетке.', true);
-      else say('Звук слышу, ищу ноту. Дёрните одну открытую струну и дайте ей звучать.');
-    } else say('Подтягивайте или ослабляйте колок, пока линия не выпрямится.');
+  if (micOn && now - peakT > 1600){
+    if (complete) say('Гитара настроена');
+    else if (now - lastSig > 1600 && now > ignoreUntil){
+      say(peak < GATE ? 'Не слышу. Поднесите телефон ближе к гитаре' : 'Дайте струне прозвучать');
+    } else if (now - lastSig < 1600) say(' ');
     peak = 0; peakT = now;
-  }
-  if (demo && demo.cur){
-    const {s, c0, t0, dur} = demo.cur, t = (now - t0) / 1000;
-    if (t < dur + .4 && !s.locked){
-      const f = freqOf(s) * Math.pow(2, demoC(c0, Math.min(t, dur)) / 1200);
-      hist = []; feed(f, .06 * Math.exp(-t * .5), now);
-    }
   }
   const fresh = now - lastSig < 320;
   for (const s of STR){
     if (s.locked){
-      if (s.col > 0 && s.col < 1) s.col = Math.min(1, s.col + dt / 1.25);
-      s.flash = s.col > .9 ? Math.max(0, (s.flash || 1) - dt * .9) : 0;
+      if (s.col > 0 && s.col < 1){ s.col = Math.min(1, s.col + dt / 1.3); if (s.col >= 1) s.birth = now; }
       s.en *= Math.exp(-dt * 3);
       continue;
     }
@@ -470,8 +515,12 @@ function update(dt, now){
     }
   }
   if (completeAt && now > completeAt && !complete){ completeAt = 0; finish(); }
-  if (complete) cp = Math.min(1, cp + dt / 3.4);
+  if (complete) cp = Math.min(1, cp + dt / 4);
   if (active) dispC += (active.cents - dispC) * Math.min(1, dt * 8);
+
+  // per-frame UI: needle and orb level
+  if (active && fresh && !complete) setNeedle(dispC);
+  $('listen').style.setProperty('--lvl', micOn ? lvl.toFixed(3) : 0);
 
   uiT += dt;
   if (uiT > .066){ uiT = 0; renderUI(now, fresh); }
@@ -481,6 +530,10 @@ let uiMode = '';
 function showMode(m){
   if (m === uiMode) return; uiMode = m;
   $('intro').hidden = m !== 'intro'; $('live').hidden = m !== 'live'; $('done').hidden = m !== 'done';
+  const d = $('dial');
+  d.classList.toggle('idle', m !== 'live');
+  d.classList.toggle('done', m === 'done');
+  if (m !== 'live') d.classList.remove('ok');
 }
 function renderUI(now, fresh){
   if (complete){ showMode('done'); return; }
@@ -488,173 +541,222 @@ function renderUI(now, fresh){
   showMode('live');
   const s = active;
   $('nName').textContent = s.name; $('nOct').textContent = s.oct;
-  if (fresh){
-    $('hz').textContent = curF.toFixed(1);
-    const c = Math.round(dispC);
-    $('cents').textContent = (c > 0 ? '+' : c < 0 ? '−' : '') + Math.abs(c) + ' ¢';
-    const ok = Math.abs(s.cents) < 4 || s.locked;
-    $('dot').style.left = (50 + Math.max(-50, Math.min(50, dispC))) + '%';
-    $('dot').classList.toggle('ok', ok);
-    const st = $('state');
-    st.classList.toggle('ok', ok);
-    st.textContent = s.locked ? `Звезда · ${STARS[s.star].ru}` : ok ? 'В резонансе' : s.cents < 0 ? 'Ниже · подтяните' : 'Выше · ослабьте';
+  const st = $('state'), d = $('dial');
+  if (fresh && !s.locked){
+    const ok = Math.abs(s.cents) < 4;
+    d.classList.toggle('ok', ok); st.classList.toggle('ok', ok);
+    st.textContent = ok ? 'Резонанс' : s.cents < 0 ? 'Подтяните' : 'Ослабьте';
   } else {
-    $('hz').textContent = freqOf(s).toFixed(2);
-    $('cents').textContent = 'цель';
-    $('dot').style.left = '50%'; $('dot').classList.remove('ok');
-    $('state').classList.remove('ok');
-    $('state').textContent = s.locked ? `Звезда · ${STARS[s.star].ru}` : 'Дёрните струну';
+    d.classList.remove('ok');
+    st.classList.toggle('ok', s.locked);
+    st.textContent = s.locked ? STARS[s.star].ru : 'Дёрните струну';
+    if (!fresh) setNeedle(0);
   }
 }
 
 /* ---------- Drawing ---------- */
 const ease = t => t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
 const lerp = (a, b, t) => a + (b - a) * t;
+const clamp01 = v => Math.max(0, Math.min(1, v));
 
-function glowPath(pts, rgb, a){
+function fadeStroke(x0, x1, rgb, a){
+  const g = ctx.createLinearGradient(x0, 0, x1, 0);
+  g.addColorStop(0, `rgba(${rgb},0)`);
+  g.addColorStop(.1, `rgba(${rgb},${a})`);
+  g.addColorStop(.9, `rgba(${rgb},${a})`);
+  g.addColorStop(1, `rgba(${rgb},0)`);
+  return g;
+}
+function glowPath(pts, rgb, a, fade){
   ctx.lineCap = 'round'; ctx.lineJoin = 'round';
-  const passes = [[10, .045], [4, .14], [1.3, .95]];
-  for (const [w, al] of passes){
+  for (const [w, al] of [[12, .035], [4.5, .12], [1.2, .95]]){
     ctx.beginPath();
     pts.forEach(([x, y], i) => i ? ctx.lineTo(x, y) : ctx.moveTo(x, y));
-    ctx.lineWidth = w; ctx.strokeStyle = `rgba(${rgb},${al * a})`; ctx.stroke();
+    ctx.lineWidth = w;
+    ctx.strokeStyle = fade ? fadeStroke(pts[0][0], pts[pts.length - 1][0], rgb, al * a) : `rgba(${rgb},${al * a})`;
+    ctx.stroke();
   }
 }
 function drawStar(x, y, r, rgb, k, t, ph){
   if (k <= 0) return;
   const pulse = RM ? 1 : 1 + .05 * Math.sin(t * 1.1 + ph);
-  const R = r * (9 + 7 * k) * pulse;
-  let g = ctx.createRadialGradient(x, y, 0, x, y, R * 3.2);
-  g.addColorStop(0, `rgba(${rgb},${.85 * k})`);
-  g.addColorStop(.1, `rgba(${rgb},${.32 * k})`);
-  g.addColorStop(.35, `rgba(${rgb},${.07 * k})`);
+  const R = r * (8 + 6 * k) * pulse;
+  let g = ctx.createRadialGradient(x, y, 0, x, y, R * 3.4);
+  g.addColorStop(0, `rgba(${rgb},${.8 * k})`);
+  g.addColorStop(.09, `rgba(${rgb},${.3 * k})`);
+  g.addColorStop(.32, `rgba(${rgb},${.07 * k})`);
   g.addColorStop(1, `rgba(${rgb},0)`);
-  ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x, y, R * 3.2, 0, 6.2832); ctx.fill();
-  // diffraction spikes, kept thin
-  const L = R * 2.4;
-  ctx.lineWidth = .7;
-  for (const [dx, dy] of [[1, 0], [0, 1]]){
-    const lg = ctx.createLinearGradient(x - dx * L, y - dy * L, x + dx * L, y + dy * L);
-    lg.addColorStop(0, `rgba(${rgb},0)`); lg.addColorStop(.5, `rgba(255,255,255,${.55 * k})`); lg.addColorStop(1, `rgba(${rgb},0)`);
-    ctx.strokeStyle = lg; ctx.beginPath(); ctx.moveTo(x - dx * L, y - dy * L); ctx.lineTo(x + dx * L, y + dy * L); ctx.stroke();
-  }
+  ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x, y, R * 3.4, 0, TAU); ctx.fill();
+  const spike = (ang, L, al, w) => {
+    const dx = Math.cos(ang) * L, dy = Math.sin(ang) * L;
+    const lg = ctx.createLinearGradient(x - dx, y - dy, x + dx, y + dy);
+    lg.addColorStop(0, `rgba(${rgb},0)`); lg.addColorStop(.5, `rgba(255,255,255,${al})`); lg.addColorStop(1, `rgba(${rgb},0)`);
+    ctx.strokeStyle = lg; ctx.lineWidth = w;
+    ctx.beginPath(); ctx.moveTo(x - dx, y - dy); ctx.lineTo(x + dx, y + dy); ctx.stroke();
+  };
+  spike(0, R * 1.9, .55 * k, .7); spike(Math.PI / 2, R * 1.9, .55 * k, .7);
+  spike(Math.PI / 4, R * .8, .22 * k, .5); spike(-Math.PI / 4, R * .8, .22 * k, .5);
   ctx.fillStyle = `rgba(255,255,255,${Math.min(1, k)})`;
-  ctx.beginPath(); ctx.arc(x, y, r * 1.7 * Math.min(1, k), 0, 6.2832); ctx.fill();
+  ctx.beginPath(); ctx.arc(x, y, r * 1.7 * Math.min(1, k), 0, TAU); ctx.fill();
 }
+function blob(x, y, rad, rgb, a){
+  const g = ctx.createRadialGradient(x, y, 0, x, y, rad);
+  g.addColorStop(0, `rgba(${rgb},${a})`); g.addColorStop(.5, `rgba(${rgb},${a * .35})`); g.addColorStop(1, `rgba(${rgb},0)`);
+  ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x, y, rad, 0, TAU); ctx.fill();
+}
+const spaced = s => s.split('').join(' ');
 
 function draw(t){
-  const {W, H} = field;
+  const {W, H, box} = field;
   ctx.clearRect(0, 0, W, H);
   ctx.globalCompositeOperation = 'lighter';
+  const cpE = ease(cp);
+  const cA = STARS.Alnilam;
+
+  // orbit dial: 12 divisions, one for each note
+  const orr = field.orbit, rot = complete && !RM ? t * .03 : 0;
+  ctx.lineWidth = 1;
+  ctx.strokeStyle = `rgba(191,195,212,${.05 + .08 * cpE})`;
+  ctx.beginPath(); ctx.arc(cA.px, cA.py, orr, 0, TAU); ctx.stroke();
+  ctx.setLineDash([1, 7]);
+  ctx.strokeStyle = `rgba(191,195,212,${.05 + .05 * cpE})`;
+  ctx.beginPath(); ctx.arc(cA.px, cA.py, orr * 1.09, 0, TAU); ctx.stroke();
+  ctx.setLineDash([]);
+  for (let i = 0; i < 12; i++){
+    const a = rot + i * TAU / 12 - Math.PI / 2, L = i === 0 ? 10 : 5;
+    ctx.strokeStyle = i === 0 ? `rgba(232,214,174,${.25 + .35 * cpE})` : `rgba(191,195,212,${.12 + .12 * cpE})`;
+    ctx.beginPath();
+    ctx.moveTo(cA.px + Math.cos(a) * orr, cA.py + Math.sin(a) * orr);
+    ctx.lineTo(cA.px + Math.cos(a) * (orr + L), cA.py + Math.sin(a) * (orr + L));
+    ctx.stroke();
+  }
 
   // sockets: where the stars will be
   for (const k in STARS){
     const st = STARS[k];
-    ctx.fillStyle = 'rgba(195,199,214,.14)';
-    ctx.beginPath(); ctx.arc(st.px, st.py, 1.3, 0, 6.2832); ctx.fill();
+    ctx.fillStyle = 'rgba(191,195,212,.16)';
+    ctx.beginPath(); ctx.arc(st.px, st.py, 1.2, 0, TAU); ctx.fill();
   }
 
-  // constellation lines
+  // completion: nebula, constellation, seventh star
   if (complete){
+    const nk = clamp01((cp - .25) / .6);
+    if (nk > 0){
+      const bh = box.bh, dr = RM ? 0 : Math.sin(t * .15) * 4;
+      blob(M42.px + dr, M42.py, bh * .19, '120,90,255', .1 * nk);
+      blob(M42.px - bh * .03, M42.py + bh * .02, bh * .13, '255,100,170', .1 * nk);
+      blob(M42.px + bh * .035, M42.py - dr, bh * .12, '80,180,255', .09 * nk);
+      blob(M42.px, M42.py, bh * .05, '255,196,160', .16 * nk);
+      SWORD.forEach((s, i) => drawStar(s.px, s.py, s.r, '220,228,255', nk * .8, t, i + 11));
+    }
     LINKS.forEach(([a, b], i) => {
-      const p = Math.max(0, Math.min(1, (cp * 1.6 - i * .09)));
+      const p = clamp01(cp * 1.6 - i * .09);
       if (p <= 0) return;
       const A = STARS[a], B = STARS[b], e = ease(p);
+      const ex = lerp(A.px, B.px, e), ey = lerp(A.py, B.py, e);
       const lg = ctx.createLinearGradient(A.px, A.py, B.px, B.py);
-      lg.addColorStop(0, 'rgba(160,150,255,.38)'); lg.addColorStop(1, 'rgba(120,190,255,.38)');
+      lg.addColorStop(0, 'rgba(200,190,255,.4)'); lg.addColorStop(1, 'rgba(140,200,255,.4)');
       ctx.strokeStyle = lg; ctx.lineWidth = .8;
-      ctx.beginPath(); ctx.moveTo(A.px, A.py); ctx.lineTo(lerp(A.px, B.px, e), lerp(A.py, B.py, e)); ctx.stroke();
-    });
-    // birth of Alnilam
-    const s7 = STARS.Alnilam, k7 = Math.max(0, Math.min(1, (cp - .45) * 2.2));
-    if (k7 > 0){
-      const bloom = Math.sin(Math.min(1, k7) * Math.PI) * .5;
-      if (bloom > 0){
-        const g = ctx.createRadialGradient(s7.px, s7.py, 0, s7.px, s7.py, field.h * .55);
-        g.addColorStop(0, `rgba(123,92,255,${.22 * bloom})`); g.addColorStop(1, 'rgba(123,92,255,0)');
-        ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+      ctx.beginPath(); ctx.moveTo(A.px, A.py); ctx.lineTo(ex, ey); ctx.stroke();
+      ctx.strokeStyle = 'rgba(138,108,255,.06)'; ctx.lineWidth = 5;
+      ctx.beginPath(); ctx.moveTo(A.px, A.py); ctx.lineTo(ex, ey); ctx.stroke();
+      if (p >= 1 && !RM){
+        const q = (t * .22 + i * .37) % 1;
+        const px = lerp(A.px, B.px, q), py = lerp(A.py, B.py, q);
+        blob(px, py, 7, '232,214,174', .55 * Math.sin(q * Math.PI));
       }
-      drawStar(s7.px, s7.py, s7.r * 1.15, s7.c, k7 * 1.15, t, 7);
+    });
+    const k7 = clamp01((cp - .42) * 2.2);
+    if (k7 > 0){
+      const bloom = Math.sin(k7 * Math.PI) * .6;
+      if (bloom > 0) blob(cA.px, cA.py, field.h * .6, '138,108,255', .2 * bloom);
+      drawStar(cA.px, cA.py, cA.r * 1.2, cA.c, k7 * 1.2, t, 7);
     }
   }
 
   // strings
-  const x0 = field.x0, x1 = field.x1, span = x1 - x0, N = 90;
+  const x0 = field.x0, x1 = field.x1, span = x1 - x0, N = 90, now = performance.now();
   for (const s of STR){
     const st = STARS[s.star];
-    if (s.locked && s.col >= 1){ drawStar(st.px, st.py, st.r, st.c, 1, t, s.i); continue; }
+    if (s.locked && s.col >= 1){
+      drawStar(st.px, st.py, st.r, st.c, 1, t, s.i);
+      if (s.birth){
+        const p = (now - s.birth) / 1500;
+        if (p < 1){
+          ctx.strokeStyle = `rgba(232,214,174,${(1 - p) * .6})`; ctx.lineWidth = .9;
+          ctx.beginPath(); ctx.arc(st.px, st.py, 6 + ease(p) * 70, 0, TAU); ctx.stroke();
+        }
+      }
+      continue;
+    }
     const isActive = s === active && !s.locked;
     if (s.locked){
       const e = ease(s.col);
       const ax = lerp(x0, st.px, e), ay = lerp(s.y, st.py, e);
       const bx = lerp(x1, st.px, e), by = lerp(s.y, st.py, e);
-      glowPath([[ax, ay], [bx, by]], '230,236,255', 1 - e * .6);
+      glowPath([[ax, ay], [bx, by]], '240,232,210', 1 - e * .5, true);
       drawStar(st.px, st.py, st.r, st.c, e * e, t, s.i);
       continue;
     }
-    // target rail when detuned
     if (isActive && Math.abs(s.off) > 2){
-      ctx.setLineDash([2, 6]); ctx.lineWidth = 1; ctx.strokeStyle = 'rgba(195,199,214,.22)';
-      ctx.beginPath(); ctx.moveTo(x0, s.y); ctx.lineTo(x1, s.y); ctx.stroke(); ctx.setLineDash([]);
+      ctx.setLineDash([1.5, 6]); ctx.lineWidth = 1; ctx.strokeStyle = 'rgba(232,214,174,.28)';
+      ctx.beginPath(); ctx.moveTo(x0 + span * .06, s.y); ctx.lineTo(x1 - span * .06, s.y); ctx.stroke(); ctx.setLineDash([]);
     }
-    const breathe = RM ? .3 : .7;
-    const amp = breathe + s.en * field.gap * (RM ? .06 : .2);
-    const w1 = 38 + s.i * 7, w2 = 61 + s.i * 9;
+    const amp = (RM ? .3 : .7) + s.en * field.gap * (RM ? .06 : .2);
+    const ts = RM ? .1 : 1, w1 = (38 + s.i * 7) * ts, w2 = (61 + s.i * 9) * ts;
     const pts = [];
     for (let j = 0; j <= N; j++){
       const u = j / N, env = Math.sin(Math.PI * u);
       const y = s.y + s.off * env
-        + amp * (env * Math.sin(t * w1 * (RM ? .1 : 1)) + .35 * Math.sin(2 * Math.PI * u) * Math.sin(t * w2 * (RM ? .1 : 1) + 1))
+        + amp * (env * Math.sin(t * w1) + .35 * Math.sin(TAU * u) * Math.sin(t * w2 + 1))
         + (s.en < .05 ? .6 * Math.sin(u * 9 + t * .9 + s.i) * env : 0);
       pts.push([x0 + u * span, y]);
     }
-    const close = isActive ? Math.max(0, 1 - Math.abs(s.cents) / 30) : 0;
+    const close = isActive ? clamp01(1 - Math.abs(s.cents) / 30) : 0;
     const rgb = isActive
-      ? `${Math.round(lerp(79, 244, close))},${Math.round(lerp(179, 240, close))},255`
-      : '195,199,214';
-    glowPath(pts, rgb, isActive ? 1 : .55 + s.en * .4);
-    // hold progress: a point of light gathering at the star's x
+      ? `${Math.round(lerp(92, 240, close))},${Math.round(lerp(200, 226, close))},${Math.round(lerp(255, 190, close))}`
+      : '191,195,212';
+    glowPath(pts, rgb, isActive ? 1 : .5 + s.en * .45, true);
     if (isActive && s.hold > 0){
       const k = Math.min(1, s.hold / .75);
-      drawStar(st.px, s.y + s.off * Math.sin(Math.PI * (st.px - x0) / span), st.r * .7, st.c, k * .8, t, s.i);
+      drawStar(st.px, s.y + s.off * Math.sin(Math.PI * (st.px - x0) / span), st.r * .7, '232,214,174', k * .8, t, s.i);
     }
   }
 
   // star names
   ctx.globalCompositeOperation = 'source-over';
-  ctx.font = '500 9px Jost, system-ui, sans-serif';
+  ctx.font = '600 8.5px Manrope, system-ui, sans-serif';
   ctx.textBaseline = 'middle';
+  const label = (st, a) => {
+    ctx.fillStyle = `rgba(191,195,212,${a})`;
+    ctx.textAlign = st.al;
+    ctx.fillText(spaced(st.ru.toUpperCase()), st.px + st.dx, st.py + st.dy);
+  };
   for (const s of STR){
-    if (!s.locked || s.col < .95) continue;
-    const st = STARS[s.star];
-    ctx.fillStyle = `rgba(195,199,214,${.55 * Math.min(1, (s.col - .95) * 20)})`;
-    ctx.textAlign = st.x < .5 ? 'right' : 'left';
-    ctx.fillText(spaced(st.ru.toUpperCase()), st.px + (st.x < .5 ? -14 : 14), st.py);
+    if (!s.locked || s.col < 1) continue;
+    label(STARS[s.star], .5 * clamp01((now - s.birth) / 800));
   }
   if (complete && cp > .6){
-    const st = STARS.Alnilam;
-    ctx.fillStyle = `rgba(207,198,255,${Math.min(.8, (cp - .6) * 3)})`;
+    ctx.font = '600 9px Manrope, system-ui, sans-serif';
+    ctx.fillStyle = `rgba(232,214,174,${Math.min(.9, (cp - .6) * 3)})`;
     ctx.textAlign = 'center';
-    ctx.fillText(spaced('АЛЬНИЛАМ'), st.px, st.py + 26);
+    ctx.fillText(spaced('АЛЬНИЛАМ'), cA.px + cA.dx, cA.py + cA.dy);
   }
 
-  // string labels
+  // string names
   for (const s of STR){
-    const isActive = s === active || s === manual;
-    const a = s.locked ? .3 : isActive ? 1 : .62;
-    ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
-    ctx.fillStyle = `rgba(244,243,255,${a})`;
-    ctx.font = '300 24px "Cormorant Garamond", Georgia, serif';
-    ctx.fillText(s.name, field.x, s.y + 3);
+    const isA = (s === active || s === manual) && !s.locked;
+    const a = s.locked ? .22 : isA ? 1 : .5;
+    ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+    ctx.fillStyle = isA ? `rgba(245,244,255,${a})` : `rgba(191,195,212,${a})`;
+    ctx.font = '300 15px Unbounded, system-ui, sans-serif';
+    ctx.fillText(s.name, field.x, s.y);
     const nw = ctx.measureText(s.name).width;
-    ctx.font = '300 11px "Cormorant Garamond", Georgia, serif';
-    ctx.fillStyle = `rgba(195,199,214,${a * .8})`;
-    ctx.fillText(s.oct, field.x + nw + 2, s.y + 5);
-    ctx.font = '300 9px "IBM Plex Mono", Menlo, monospace';
-    ctx.fillText(freqOf(s).toFixed(1), field.x, s.y + 17);
+    ctx.font = '400 8px Manrope, system-ui, sans-serif';
+    ctx.fillStyle = `rgba(191,195,212,${a * .7})`;
+    ctx.fillText(s.oct, field.x + nw + 2, s.y + 6);
   }
 }
-const spaced = s => s.split('').join(' ');
 
 /* ---------- Loop ---------- */
 let last = performance.now();
@@ -668,5 +770,3 @@ resize();
 requestAnimationFrame(loop);
 })();
 </script>
-</body>
-</html>
