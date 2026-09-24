@@ -1,0 +1,652 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#05040B">
+<title>Cosmic Tuner</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&family=IBM+Plex+Mono:wght@300;400&family=Jost:wght@400;500&display=swap">
+<style>
+body{margin:0}
+:root{
+  color-scheme:dark;
+  --void:#05040B;
+  --indigo:#0E0B2A;
+  --violet:#7B5CFF;
+  --blue:#4FB3FF;
+  --silver:#C3C7D6;
+  --white:#F4F3FF;
+  --dim:rgba(195,199,214,.58);
+  --faint:rgba(195,199,214,.16);
+  --display:'Cormorant Garamond','Cormorant',Georgia,'Times New Roman',serif;
+  --ui:'Jost','Futura','Avenir Next',system-ui,sans-serif;
+  --mono:'IBM Plex Mono',ui-monospace,'SF Mono',Menlo,monospace;
+}
+html,body{height:100%}
+[hidden]{display:none!important}
+body{
+  background:
+    radial-gradient(120% 80% at 50% 70%, #151040 0%, #0A0823 42%, var(--void) 100%);
+  background-color:var(--void);
+  color:var(--white);
+  font-family:var(--ui);
+  overflow:hidden;
+  -webkit-tap-highlight-color:transparent;
+}
+#sky{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:manipulation}
+.app{
+  position:relative;height:100%;
+  display:grid;grid-template-rows:auto auto 1fr auto;
+  max-width:980px;margin:0 auto;
+  padding-inline:max(16px, env(safe-area-inset-left, 0px));
+  pointer-events:none;
+}
+.app button{pointer-events:auto}
+
+.top{display:flex;justify-content:space-between;align-items:center;padding-block:18px 6px}
+.mark{font:500 11px/1 var(--ui);letter-spacing:.44em;color:var(--silver)}
+.a4{
+  background:none;border:0;color:var(--dim);cursor:pointer;
+  font:400 12px/1 var(--mono);letter-spacing:.04em;padding:8px 0 8px 12px;
+}
+.a4 sub{font-size:.75em}
+.a4:hover{color:var(--white)}
+
+.readout{height:clamp(170px,28vh,236px);display:grid;place-items:center;text-align:center;overflow:hidden}
+.readout > div{display:grid;justify-items:center;gap:10px}
+.big{margin:0;font:300 clamp(34px,7vw,56px)/1.02 var(--display);text-wrap:balance;letter-spacing:.005em}
+.big em{font-style:italic;color:#CFC6FF}
+.sub{margin:0;max-width:40ch;font:400 14px/1.55 var(--ui);color:var(--dim);text-wrap:balance}
+
+.note{font:300 clamp(76px,15vw,124px)/.86 var(--display);letter-spacing:-.01em}
+.note sub{font-size:.3em;vertical-align:baseline;margin-left:.06em;color:var(--dim)}
+.hz{font:300 15px/1 var(--mono);color:var(--silver);font-variant-numeric:tabular-nums;display:flex;gap:8px;align-items:baseline}
+.hz .u,.hz .sep{color:var(--dim)}
+.meter{position:relative;width:min(260px,70vw);height:16px;margin-top:2px}
+.meter::before{content:"";position:absolute;left:0;right:0;top:50%;height:1px;background:var(--faint)}
+.meter i{position:absolute;top:4px;width:1px;height:8px;background:var(--faint)}
+.meter i.c{top:0;height:16px;background:rgba(244,243,255,.5)}
+.meter b{
+  position:absolute;top:50%;left:50%;width:9px;height:9px;border-radius:50%;
+  transform:translate(-50%,-50%);background:var(--blue);
+  box-shadow:0 0 10px var(--blue),0 0 26px rgba(79,179,255,.5);
+  transition:background .3s, box-shadow .3s;
+}
+.meter b.ok{background:#fff;box-shadow:0 0 12px #fff,0 0 34px rgba(123,92,255,.8)}
+.state{font:500 11px/1 var(--ui);letter-spacing:.3em;text-transform:uppercase;color:var(--dim)}
+.state.ok{color:var(--white)}
+
+#field{min-height:0}
+
+.controls{display:grid;justify-items:center;gap:10px;padding-block:10px max(20px, env(safe-area-inset-bottom, 0px))}
+.row{display:flex;flex-wrap:wrap;justify-content:center;gap:10px}
+.btn{
+  appearance:none;cursor:pointer;
+  font:500 11px/1 var(--ui);letter-spacing:.24em;text-transform:uppercase;
+  color:var(--white);
+  background:rgba(14,11,42,.55);
+  -webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);
+  border:1px solid rgba(195,199,214,.22);
+  border-radius:999px;padding:14px 20px;
+  transition:border-color .25s, box-shadow .25s, color .25s;
+}
+.btn:hover{border-color:rgba(195,199,214,.5)}
+.btn.primary{border-color:rgba(79,179,255,.55);box-shadow:inset 0 0 22px rgba(79,179,255,.16),0 0 22px rgba(79,179,255,.1)}
+.btn.primary.on{border-color:rgba(123,92,255,.8);box-shadow:inset 0 0 22px rgba(123,92,255,.3),0 0 26px rgba(123,92,255,.25)}
+.btn.ghost{background:transparent;color:var(--silver)}
+.btn:disabled{opacity:.4;cursor:default}
+.btn:focus-visible,.a4:focus-visible{outline:1px solid var(--blue);outline-offset:3px}
+.msg{margin:0;max-width:52ch;text-align:center;font:400 12px/1.5 var(--ui);color:var(--dim);text-wrap:balance;min-height:1.5em}
+.msg.warn{color:#E6DCFF}
+
+@media (max-width:420px){
+  .row{gap:6px}
+  .btn{padding:12px 12px;letter-spacing:.12em;font-size:10px}
+}
+</style>
+</head>
+<body>
+
+<canvas id="sky" aria-label="Шесть струн гитары в виде световых линий. Настроенная струна становится звездой созвездия Орион."></canvas>
+
+<div class="app">
+  <header class="top">
+    <div class="mark">COSMIC&nbsp;TUNER</div>
+    <button class="a4" id="a4" type="button" title="Эталонная частота ноты ля">A<sub>4</sub> = <span id="a4v">440</span> Hz</button>
+  </header>
+
+  <section class="readout" aria-live="polite">
+    <div id="intro">
+      <p class="big">Шесть струн.<br><em>Семь звёзд.</em></p>
+      <p class="sub">Настройте струну, и она станет звездой Ориона. Когда в строю все шесть, родится седьмая.</p>
+    </div>
+    <div id="live" hidden>
+      <div class="note"><span id="nName">E</span><sub id="nOct">2</sub></div>
+      <div class="hz"><span id="hz">82.4</span><span class="u">Hz</span><span class="sep">·</span><span id="cents">0 ¢</span></div>
+      <div class="meter" aria-hidden="true">
+        <i style="left:0"></i><i style="left:25%"></i><i class="c" style="left:50%"></i><i style="left:75%"></i><i style="left:100%"></i>
+        <b id="dot"></b>
+      </div>
+      <div class="state" id="state">Слушаю</div>
+    </div>
+    <div id="done" hidden>
+      <p class="big"><em>Резонанс</em></p>
+      <p class="sub">Шесть струн настроены. Из их гармонии родилась седьмая звезда: Альнилам, центр пояса Ориона.</p>
+    </div>
+  </section>
+
+  <div id="field"></div>
+
+  <footer class="controls">
+    <div class="row">
+      <button class="btn primary" id="listen" type="button">Слушать</button>
+      <button class="btn" id="demo" type="button">Демо</button>
+      <button class="btn ghost" id="mode" type="button" title="Выбор струны: авто или вручную">Авто</button>
+      <button class="btn ghost" id="reset" type="button">Сброс</button>
+    </div>
+    <p class="msg" id="msg">Коснитесь струны, чтобы услышать эталонный тон</p>
+  </footer>
+</div>
+
+<script>
+(() => {
+const $ = id => document.getElementById(id);
+const cv = $('sky'), ctx = cv.getContext('2d');
+const RM = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* ---------- Model ---------- */
+const STR = [
+  {n:1, name:'E', oct:4, semi:-5,  star:'Bellatrix'},
+  {n:2, name:'B', oct:3, semi:-10, star:'Betelgeuse'},
+  {n:3, name:'G', oct:3, semi:-14, star:'Mintaka'},
+  {n:4, name:'D', oct:3, semi:-19, star:'Alnitak'},
+  {n:5, name:'A', oct:2, semi:-24, star:'Rigel'},
+  {n:6, name:'E', oct:2, semi:-29, star:'Saiph'},
+];
+// Orion as seen from the northern hemisphere. Betelgeuse is a red supergiant, Rigel blue-white.
+const STARS = {
+  Betelgeuse:{x:.26, y:.13, r:1.25, c:'255,176,120', ru:'Бетельгейзе'},
+  Bellatrix: {x:.74, y:.20, r:.95,  c:'214,226,255', ru:'Беллатрикс'},
+  Mintaka:   {x:.61, y:.50, r:.82,  c:'210,224,255', ru:'Минтака'},
+  Alnilam:   {x:.505,y:.535,r:1.08, c:'226,234,255', ru:'Альнилам'},
+  Alnitak:   {x:.40, y:.575,r:.9,   c:'210,224,255', ru:'Альнитак'},
+  Saiph:     {x:.32, y:.89, r:.9,   c:'202,220,255', ru:'Саиф'},
+  Rigel:     {x:.76, y:.84, r:1.2,  c:'178,206,255', ru:'Ригель'},
+};
+const LINKS = [['Betelgeuse','Bellatrix'],['Betelgeuse','Alnitak'],['Bellatrix','Mintaka'],
+  ['Mintaka','Alnilam'],['Alnilam','Alnitak'],['Alnitak','Saiph'],['Mintaka','Rigel']];
+
+let A4 = 440;
+const A4S = [440, 442, 432, 444];
+const freqOf = s => A4 * Math.pow(2, s.semi / 12);
+STR.forEach((s, i) => Object.assign(s, {i, off:0, en:0, cents:0, locked:false, col:0, hold:0, flash:0}));
+
+let field = null;
+let active = null, manual = null;
+let hist = [], curF = 0, lastSig = -1e9, dispC = 0;
+let complete = false, cp = 0, completeAt = 0;
+let ignoreUntil = 0;
+
+/* ---------- Layout ---------- */
+function resize(){
+  const DPR = Math.min(2, window.devicePixelRatio || 1);
+  const W = innerWidth, H = innerHeight;
+  cv.width = W * DPR; cv.height = H * DPR;
+  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  const r = $('field').getBoundingClientRect();
+  const gap = r.height / (STR.length + 1);
+  field = {x:r.left, y:r.top, w:r.width, h:r.height, gap, W, H};
+  field.x0 = r.left + (r.width < 520 ? 46 : 66);
+  field.x1 = r.right;
+  STR.forEach((s, i) => s.y = r.top + gap * (i + 1));
+  const bh = r.height * .9, bw = Math.min((field.x1 - field.x0) * .82, bh * .78);
+  const bx = field.x0 + (field.x1 - field.x0 - bw) / 2, by = r.top + (r.height - bh) / 2;
+  for (const k in STARS){ const st = STARS[k]; st.px = bx + st.x * bw; st.py = by + st.y * bh; }
+}
+addEventListener('resize', resize);
+if ('ResizeObserver' in window) new ResizeObserver(resize).observe($('field'));
+
+/* ---------- Audio ---------- */
+let ac = null, master = null;
+function audio(){
+  if (!ac){
+    ac = new (window.AudioContext || window.webkitAudioContext)();
+    master = ac.createGain(); master.gain.value = .85;
+    const comp = ac.createDynamicsCompressor();
+    master.connect(comp); comp.connect(ac.destination);
+  }
+  if (ac.state === 'suspended') ac.resume();
+  return ac;
+}
+const ksCache = {};
+function ksBuffer(f){
+  const sr = ac.sampleRate, P = Math.max(2, Math.floor(sr / f));
+  if (ksCache[P]) return ksCache[P];
+  const len = Math.floor(sr * 3.4), b = ac.createBuffer(1, len, sr), d = b.getChannelData(0);
+  let prev = 0;
+  for (let i = 0; i <= P; i++){ const v = Math.random() * 2 - 1; d[i] = (v + prev) * .5; prev = v; }
+  for (let i = P + 1; i < len; i++) d[i] = .4984 * (d[i - P] + d[i - P - 1]);
+  let pk = 0; for (let i = 0; i < len; i++) pk = Math.max(pk, Math.abs(d[i]));
+  if (pk) for (let i = 0; i < len; i++) d[i] /= pk;
+  return (ksCache[P] = {b, P});
+}
+// Plucked string (Karplus–Strong). Optional cents curve glides the pitch.
+function pluck(f, {when = 0, gain = .5, curve = null, dur = 3.2} = {}){
+  audio();
+  const {b, P} = ksBuffer(f);
+  const src = ac.createBufferSource(); src.buffer = b;
+  const base = f * (P + .5) / ac.sampleRate, t = ac.currentTime + when;
+  if (curve){
+    const arr = new Float32Array(curve.length);
+    curve.forEach((c, i) => arr[i] = base * Math.pow(2, c / 1200));
+    src.playbackRate.setValueCurveAtTime(arr, t, dur);
+  } else src.playbackRate.value = base;
+  const lp = ac.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = Math.min(7000, f * 16);
+  const g = ac.createGain();
+  g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(gain, t + .004);
+  g.gain.setTargetAtTime(0, t + dur - .5, .22);
+  src.connect(lp); lp.connect(g); g.connect(master);
+  src.start(t); src.stop(t + dur + .4);
+}
+function chime(f, gain = .06, when = 0){
+  audio();
+  const t = ac.currentTime + when;
+  [[2, 1], [4.008, .45], [6.02, .18]].forEach(([m, a]) => {
+    const o = ac.createOscillator(); o.type = 'sine'; o.frequency.value = f * m;
+    const g = ac.createGain();
+    g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(gain * a, t + .03);
+    g.gain.exponentialRampToValueAtTime(.0001, t + 2.8);
+    o.connect(g); g.connect(master); o.start(t); o.stop(t + 3);
+  });
+}
+
+/* ---------- Pitch detection (YIN) ---------- */
+let an = null, buf = null, micOn = false, stream = null, yd = null, wake = null;
+function yin(x, sr){
+  const N = x.length, Wn = N >> 1;
+  let rms = 0; for (let i = 0; i < N; i++) rms += x[i] * x[i];
+  rms = Math.sqrt(rms / N);
+  if (rms < .008) return {f:0, rms};
+  const minT = Math.floor(sr / 1100), maxT = Math.min(Wn - 2, Math.floor(sr / 62));
+  if (!yd || yd.length < maxT + 2) yd = new Float32Array(maxT + 2);
+  yd[0] = 1; let run = 0;
+  for (let t = 1; t <= maxT + 1; t++){
+    let s = 0;
+    for (let j = 0; j < Wn; j++){ const v = x[j] - x[j + t]; s += v * v; }
+    run += s; yd[t] = run ? s * t / run : 1;
+  }
+  let T = -1;
+  for (let t = minT; t <= maxT; t++){
+    if (yd[t] < .13){ while (t + 1 <= maxT && yd[t + 1] < yd[t]) t++; T = t; break; }
+  }
+  if (T < 1) return {f:0, rms};
+  const a = yd[T - 1], b = yd[T], c = yd[T + 1], den = a + c - 2 * b;
+  const sh = den ? (a - c) / (2 * den) : 0;
+  return {f: sr / (T + sh), rms};
+}
+async function startMic(){
+  audio();
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){ micFail(); return; }
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false, noiseSuppression:false, autoGainControl:false}});
+  } catch (e){ micFail(); return; }
+  const src = ac.createMediaStreamSource(stream);
+  an = ac.createAnalyser(); an.fftSize = 4096; src.connect(an);
+  buf = new Float32Array(an.fftSize);
+  micOn = true; stopDemo();
+  $('listen').classList.add('on'); $('listen').textContent = 'Слушаю';
+  say('Дёрните открытую струну. Струна ниже строя сияет под своей линией, выше строя — над ней.');
+  try { if (navigator.wakeLock) wake = await navigator.wakeLock.request('screen'); } catch (e){}
+}
+function stopMic(){
+  micOn = false;
+  if (stream) stream.getTracks().forEach(t => t.stop());
+  stream = null; an = null;
+  $('listen').classList.remove('on'); $('listen').textContent = 'Слушать';
+  try { wake && wake.release(); } catch (e){} wake = null;
+  say('Микрофон выключен');
+}
+function micFail(){
+  say('Микрофон здесь недоступен. Откройте cosmic-tuner.html в Safari или Chrome и разрешите доступ. А пока можно включить демо.', true);
+}
+function say(t, warn){ const m = $('msg'); m.textContent = t; m.classList.toggle('warn', !!warn); }
+
+const median = a => { const s = [...a].sort((x, y) => x - y); return s[s.length >> 1]; };
+const centsBetween = (f, g) => 1200 * Math.log2(f / g);
+
+function feed(f, level, now){
+  if (hist.length && Math.abs(centsBetween(f, median(hist))) > 80) hist = [];
+  hist.push(f); if (hist.length > 5) hist.shift();
+  const m = median(hist);
+  let s = manual;
+  if (!s){
+    let bd = 1e9;
+    for (const x of STR){ const c = Math.abs(centsBetween(m, freqOf(x))); if (c < bd){ bd = c; s = x; } }
+    if (bd > 350) return;
+  }
+  curF = m; lastSig = now; active = s;
+  s.cents = centsBetween(m, freqOf(s));
+  s.en = Math.min(1, s.en + level * 5 + .12);
+}
+
+/* ---------- Locking & completion ---------- */
+function lock(s, now){
+  s.locked = true; s.col = .0001; s.hold = 0; s.flash = 0;
+  chime(freqOf(s), .055);
+  try { navigator.vibrate && navigator.vibrate(18); } catch (e){}
+  if (manual === s) setManual(null);
+  if (STR.every(x => x.locked)) completeAt = now + 1350;
+}
+function finish(){
+  complete = true; cp = 0;
+  STR.slice().reverse().forEach((s, k) => pluck(freqOf(s), {when: k * .075, gain: .32, dur: 3.2}));
+  chime(freqOf(STR[5]) * 2, .05, .9);
+}
+function resetAll(){
+  STR.forEach(s => Object.assign(s, {off:0, en:0, cents:0, locked:false, col:0, hold:0, flash:0}));
+  complete = false; cp = 0; completeAt = 0; active = null; hist = []; lastSig = -1e9;
+  setManual(null); stopDemo();
+}
+
+/* ---------- Demo ---------- */
+let demo = null;
+const demoC = (c0, t) => c0 * Math.exp(-t * 1.25) * Math.cos(t * 1.9);
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+async function runDemo(){
+  if (demo) return;
+  audio();
+  if (complete) resetAll();
+  setManual(null);
+  const token = {}; demo = token;
+  $('demo').disabled = true;
+  say('Демо: каждая струна входит в строй и становится звездой.');
+  for (const s of STR.slice().reverse()){
+    if (demo !== token) break;
+    if (s.locked) continue;
+    const c0 = (Math.random() < .5 ? -1 : 1) * (20 + Math.random() * 24);
+    const dur = 3.2, curve = [];
+    for (let i = 0; i < 64; i++) curve.push(demoC(c0, i / 63 * dur));
+    pluck(freqOf(s), {gain:.55, curve, dur});
+    token.cur = {s, c0, t0: performance.now(), dur};
+    const t0 = performance.now();
+    while (demo === token && !s.locked && performance.now() - t0 < 5000) await sleep(60);
+    await sleep(380);
+  }
+  if (demo === token){ demo = null; $('demo').disabled = false; say('Коснитесь струны, чтобы услышать эталонный тон'); }
+}
+function stopDemo(){ if (demo){ demo = null; $('demo').disabled = false; } }
+
+/* ---------- Controls ---------- */
+function setManual(s){
+  manual = s;
+  $('mode').textContent = s ? `Струна ${s.n} · ${s.name}` : 'Авто';
+}
+$('listen').onclick = () => micOn ? stopMic() : startMic();
+$('demo').onclick = runDemo;
+$('reset').onclick = () => { resetAll(); say('Коснитесь струны, чтобы услышать эталонный тон'); };
+$('mode').onclick = () => setManual(null);
+$('a4').onclick = () => {
+  A4 = A4S[(A4S.indexOf(A4) + 1) % A4S.length];
+  $('a4v').textContent = A4;
+  say(`Эталон: ля первой октавы = ${A4} Hz`);
+};
+cv.addEventListener('pointerdown', e => {
+  if (!field) return;
+  const x = e.clientX, y = e.clientY;
+  if (x < field.x - 8 || x > field.x1 + 8) return;
+  let s = null, bd = field.gap / 2;
+  for (const k of STR){ const d = Math.abs(y - k.y); if (d < bd){ bd = d; s = k; } }
+  if (!s) return;
+  audio(); stopDemo();
+  if (s.locked){ s.locked = false; s.col = 0; s.off = 0; complete = false; cp = 0; completeAt = 0; }
+  setManual(s);
+  active = s; s.en = Math.max(s.en, .6);
+  pluck(freqOf(s), {gain:.5});
+  ignoreUntil = performance.now() + 2600;
+  say(`Струна ${s.n}: ${s.name}${sub(s.oct)} · ${freqOf(s).toFixed(2)} Hz`);
+});
+const SUBS = '₀₁₂₃₄₅₆₇₈₉';
+const sub = n => String(n).split('').map(d => SUBS[+d]).join('');
+
+/* ---------- Update ---------- */
+let frame = 0, uiT = 0;
+function update(dt, now){
+  frame++;
+  if (micOn && an && !demo && now > ignoreUntil && frame % 2 === 0){
+    an.getFloatTimeDomainData(buf);
+    const r = yin(buf, ac.sampleRate);
+    if (r.f > 62 && r.f < 1100) feed(r.f, r.rms, now);
+  }
+  if (demo && demo.cur){
+    const {s, c0, t0, dur} = demo.cur, t = (now - t0) / 1000;
+    if (t < dur + .4 && !s.locked){
+      const f = freqOf(s) * Math.pow(2, demoC(c0, Math.min(t, dur)) / 1200);
+      hist = []; feed(f, .06 * Math.exp(-t * .5), now);
+    }
+  }
+  const fresh = now - lastSig < 320;
+  for (const s of STR){
+    if (s.locked){
+      if (s.col > 0 && s.col < 1) s.col = Math.min(1, s.col + dt / 1.25);
+      s.flash = s.col > .9 ? Math.max(0, (s.flash || 1) - dt * .9) : 0;
+      s.en *= Math.exp(-dt * 3);
+      continue;
+    }
+    const isActive = s === active && fresh;
+    if (isActive){
+      const c = Math.max(-50, Math.min(50, s.cents));
+      const target = -(c / 50) * field.gap * .44;
+      s.off += (target - s.off) * Math.min(1, dt * 3.2);
+      if (Math.abs(s.cents) < 4) s.hold += dt; else s.hold = Math.max(0, s.hold - dt * 2);
+      if (s.hold >= .75) lock(s, now);
+    } else {
+      s.off += (0 - s.off) * Math.min(1, dt * .5);
+      s.hold = Math.max(0, s.hold - dt);
+      s.en *= Math.exp(-dt * 1.4);
+    }
+  }
+  if (completeAt && now > completeAt && !complete){ completeAt = 0; finish(); }
+  if (complete) cp = Math.min(1, cp + dt / 3.4);
+  if (active) dispC += (active.cents - dispC) * Math.min(1, dt * 8);
+
+  uiT += dt;
+  if (uiT > .066){ uiT = 0; renderUI(now, fresh); }
+}
+
+let uiMode = '';
+function showMode(m){
+  if (m === uiMode) return; uiMode = m;
+  $('intro').hidden = m !== 'intro'; $('live').hidden = m !== 'live'; $('done').hidden = m !== 'done';
+}
+function renderUI(now, fresh){
+  if (complete){ showMode('done'); return; }
+  if (!active || (!fresh && now - lastSig > 4000 && !manual)){ showMode('intro'); return; }
+  showMode('live');
+  const s = active;
+  $('nName').textContent = s.name; $('nOct').textContent = s.oct;
+  if (fresh){
+    $('hz').textContent = curF.toFixed(1);
+    const c = Math.round(dispC);
+    $('cents').textContent = (c > 0 ? '+' : c < 0 ? '−' : '') + Math.abs(c) + ' ¢';
+    const ok = Math.abs(s.cents) < 4 || s.locked;
+    $('dot').style.left = (50 + Math.max(-50, Math.min(50, dispC))) + '%';
+    $('dot').classList.toggle('ok', ok);
+    const st = $('state');
+    st.classList.toggle('ok', ok);
+    st.textContent = s.locked ? `Звезда · ${STARS[s.star].ru}` : ok ? 'В резонансе' : s.cents < 0 ? 'Ниже · подтяните' : 'Выше · ослабьте';
+  } else {
+    $('hz').textContent = freqOf(s).toFixed(2);
+    $('cents').textContent = 'цель';
+    $('dot').style.left = '50%'; $('dot').classList.remove('ok');
+    $('state').classList.remove('ok');
+    $('state').textContent = s.locked ? `Звезда · ${STARS[s.star].ru}` : 'Дёрните струну';
+  }
+}
+
+/* ---------- Drawing ---------- */
+const ease = t => t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+const lerp = (a, b, t) => a + (b - a) * t;
+
+function glowPath(pts, rgb, a){
+  ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  const passes = [[10, .045], [4, .14], [1.3, .95]];
+  for (const [w, al] of passes){
+    ctx.beginPath();
+    pts.forEach(([x, y], i) => i ? ctx.lineTo(x, y) : ctx.moveTo(x, y));
+    ctx.lineWidth = w; ctx.strokeStyle = `rgba(${rgb},${al * a})`; ctx.stroke();
+  }
+}
+function drawStar(x, y, r, rgb, k, t, ph){
+  if (k <= 0) return;
+  const pulse = RM ? 1 : 1 + .05 * Math.sin(t * 1.1 + ph);
+  const R = r * (9 + 7 * k) * pulse;
+  let g = ctx.createRadialGradient(x, y, 0, x, y, R * 3.2);
+  g.addColorStop(0, `rgba(${rgb},${.85 * k})`);
+  g.addColorStop(.1, `rgba(${rgb},${.32 * k})`);
+  g.addColorStop(.35, `rgba(${rgb},${.07 * k})`);
+  g.addColorStop(1, `rgba(${rgb},0)`);
+  ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x, y, R * 3.2, 0, 6.2832); ctx.fill();
+  // diffraction spikes, kept thin
+  const L = R * 2.4;
+  ctx.lineWidth = .7;
+  for (const [dx, dy] of [[1, 0], [0, 1]]){
+    const lg = ctx.createLinearGradient(x - dx * L, y - dy * L, x + dx * L, y + dy * L);
+    lg.addColorStop(0, `rgba(${rgb},0)`); lg.addColorStop(.5, `rgba(255,255,255,${.55 * k})`); lg.addColorStop(1, `rgba(${rgb},0)`);
+    ctx.strokeStyle = lg; ctx.beginPath(); ctx.moveTo(x - dx * L, y - dy * L); ctx.lineTo(x + dx * L, y + dy * L); ctx.stroke();
+  }
+  ctx.fillStyle = `rgba(255,255,255,${Math.min(1, k)})`;
+  ctx.beginPath(); ctx.arc(x, y, r * 1.7 * Math.min(1, k), 0, 6.2832); ctx.fill();
+}
+
+function draw(t){
+  const {W, H} = field;
+  ctx.clearRect(0, 0, W, H);
+  ctx.globalCompositeOperation = 'lighter';
+
+  // sockets: where the stars will be
+  for (const k in STARS){
+    const st = STARS[k];
+    ctx.fillStyle = 'rgba(195,199,214,.14)';
+    ctx.beginPath(); ctx.arc(st.px, st.py, 1.3, 0, 6.2832); ctx.fill();
+  }
+
+  // constellation lines
+  if (complete){
+    LINKS.forEach(([a, b], i) => {
+      const p = Math.max(0, Math.min(1, (cp * 1.6 - i * .09)));
+      if (p <= 0) return;
+      const A = STARS[a], B = STARS[b], e = ease(p);
+      const lg = ctx.createLinearGradient(A.px, A.py, B.px, B.py);
+      lg.addColorStop(0, 'rgba(160,150,255,.38)'); lg.addColorStop(1, 'rgba(120,190,255,.38)');
+      ctx.strokeStyle = lg; ctx.lineWidth = .8;
+      ctx.beginPath(); ctx.moveTo(A.px, A.py); ctx.lineTo(lerp(A.px, B.px, e), lerp(A.py, B.py, e)); ctx.stroke();
+    });
+    // birth of Alnilam
+    const s7 = STARS.Alnilam, k7 = Math.max(0, Math.min(1, (cp - .45) * 2.2));
+    if (k7 > 0){
+      const bloom = Math.sin(Math.min(1, k7) * Math.PI) * .5;
+      if (bloom > 0){
+        const g = ctx.createRadialGradient(s7.px, s7.py, 0, s7.px, s7.py, field.h * .55);
+        g.addColorStop(0, `rgba(123,92,255,${.22 * bloom})`); g.addColorStop(1, 'rgba(123,92,255,0)');
+        ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+      }
+      drawStar(s7.px, s7.py, s7.r * 1.15, s7.c, k7 * 1.15, t, 7);
+    }
+  }
+
+  // strings
+  const x0 = field.x0, x1 = field.x1, span = x1 - x0, N = 90;
+  for (const s of STR){
+    const st = STARS[s.star];
+    if (s.locked && s.col >= 1){ drawStar(st.px, st.py, st.r, st.c, 1, t, s.i); continue; }
+    const isActive = s === active && !s.locked;
+    if (s.locked){
+      const e = ease(s.col);
+      const ax = lerp(x0, st.px, e), ay = lerp(s.y, st.py, e);
+      const bx = lerp(x1, st.px, e), by = lerp(s.y, st.py, e);
+      glowPath([[ax, ay], [bx, by]], '230,236,255', 1 - e * .6);
+      drawStar(st.px, st.py, st.r, st.c, e * e, t, s.i);
+      continue;
+    }
+    // target rail when detuned
+    if (isActive && Math.abs(s.off) > 2){
+      ctx.setLineDash([2, 6]); ctx.lineWidth = 1; ctx.strokeStyle = 'rgba(195,199,214,.22)';
+      ctx.beginPath(); ctx.moveTo(x0, s.y); ctx.lineTo(x1, s.y); ctx.stroke(); ctx.setLineDash([]);
+    }
+    const breathe = RM ? .3 : .7;
+    const amp = breathe + s.en * field.gap * (RM ? .06 : .2);
+    const w1 = 38 + s.i * 7, w2 = 61 + s.i * 9;
+    const pts = [];
+    for (let j = 0; j <= N; j++){
+      const u = j / N, env = Math.sin(Math.PI * u);
+      const y = s.y + s.off * env
+        + amp * (env * Math.sin(t * w1 * (RM ? .1 : 1)) + .35 * Math.sin(2 * Math.PI * u) * Math.sin(t * w2 * (RM ? .1 : 1) + 1))
+        + (s.en < .05 ? .6 * Math.sin(u * 9 + t * .9 + s.i) * env : 0);
+      pts.push([x0 + u * span, y]);
+    }
+    const close = isActive ? Math.max(0, 1 - Math.abs(s.cents) / 30) : 0;
+    const rgb = isActive
+      ? `${Math.round(lerp(79, 244, close))},${Math.round(lerp(179, 240, close))},255`
+      : '195,199,214';
+    glowPath(pts, rgb, isActive ? 1 : .55 + s.en * .4);
+    // hold progress: a point of light gathering at the star's x
+    if (isActive && s.hold > 0){
+      const k = Math.min(1, s.hold / .75);
+      drawStar(st.px, s.y + s.off * Math.sin(Math.PI * (st.px - x0) / span), st.r * .7, st.c, k * .8, t, s.i);
+    }
+  }
+
+  // star names
+  ctx.globalCompositeOperation = 'source-over';
+  ctx.font = '500 9px Jost, system-ui, sans-serif';
+  ctx.textBaseline = 'middle';
+  for (const s of STR){
+    if (!s.locked || s.col < .95) continue;
+    const st = STARS[s.star];
+    ctx.fillStyle = `rgba(195,199,214,${.55 * Math.min(1, (s.col - .95) * 20)})`;
+    ctx.textAlign = st.x < .5 ? 'right' : 'left';
+    ctx.fillText(spaced(st.ru.toUpperCase()), st.px + (st.x < .5 ? -14 : 14), st.py);
+  }
+  if (complete && cp > .6){
+    const st = STARS.Alnilam;
+    ctx.fillStyle = `rgba(207,198,255,${Math.min(.8, (cp - .6) * 3)})`;
+    ctx.textAlign = 'center';
+    ctx.fillText(spaced('АЛЬНИЛАМ'), st.px, st.py + 26);
+  }
+
+  // string labels
+  for (const s of STR){
+    const isActive = s === active || s === manual;
+    const a = s.locked ? .3 : isActive ? 1 : .62;
+    ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+    ctx.fillStyle = `rgba(244,243,255,${a})`;
+    ctx.font = '300 24px "Cormorant Garamond", Georgia, serif';
+    ctx.fillText(s.name, field.x, s.y + 3);
+    const nw = ctx.measureText(s.name).width;
+    ctx.font = '300 11px "Cormorant Garamond", Georgia, serif';
+    ctx.fillStyle = `rgba(195,199,214,${a * .8})`;
+    ctx.fillText(s.oct, field.x + nw + 2, s.y + 5);
+    ctx.font = '300 9px "IBM Plex Mono", Menlo, monospace';
+    ctx.fillText(freqOf(s).toFixed(1), field.x, s.y + 17);
+  }
+}
+const spaced = s => s.split('').join(' ');
+
+/* ---------- Loop ---------- */
+let last = performance.now();
+function loop(now){
+  const dt = Math.min(.05, (now - last) / 1000); last = now;
+  if (field){ update(dt, now); draw(now / 1000); }
+  requestAnimationFrame(loop);
+}
+resize();
+(document.fonts && document.fonts.ready ? document.fonts.ready : Promise.resolve()).then(resize);
+requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>
