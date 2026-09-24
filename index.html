@@ -266,11 +266,12 @@ function chime(f, gain = .06, when = 0){
 
 /* ---------- Pitch detection (YIN) ---------- */
 let an = null, buf = null, micOn = false, stream = null, yd = null, wake = null;
+let peak = 0, peakT = 0;
 function yin(x, sr){
   const N = x.length, Wn = N >> 1;
   let rms = 0; for (let i = 0; i < N; i++) rms += x[i] * x[i];
   rms = Math.sqrt(rms / N);
-  if (rms < .008) return {f:0, rms};
+  if (rms < .003) return {f:0, rms};
   const minT = Math.floor(sr / 1100), maxT = Math.min(Wn - 2, Math.floor(sr / 62));
   if (!yd || yd.length < maxT + 2) yd = new Float32Array(maxT + 2);
   yd[0] = 1; let run = 0;
@@ -281,7 +282,11 @@ function yin(x, sr){
   }
   let T = -1;
   for (let t = minT; t <= maxT; t++){
-    if (yd[t] < .13){ while (t + 1 <= maxT && yd[t + 1] < yd[t]) t++; T = t; break; }
+    if (yd[t] < .15){ while (t + 1 <= maxT && yd[t + 1] < yd[t]) t++; T = t; break; }
+  }
+  if (T < 0){ // no clear dip: accept the deepest one if it is reasonably periodic
+    let m = 1e9; for (let t = minT; t <= maxT; t++) if (yd[t] < m){ m = yd[t]; T = t; }
+    if (m > .35) T = -1;
   }
   if (T < 1) return {f:0, rms};
   const a = yd[T - 1], b = yd[T], c = yd[T + 1], den = a + c - 2 * b;
@@ -294,8 +299,13 @@ async function startMic(){
   try {
     stream = await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false, noiseSuppression:false, autoGainControl:false}});
   } catch (e){ micFail(); return; }
+  // iOS: the context can be suspended/interrupted once the mic session starts
+  try { if (ac.state !== 'running') await ac.resume(); } catch (e){}
   const src = ac.createMediaStreamSource(stream);
   an = ac.createAnalyser(); an.fftSize = 4096; src.connect(an);
+  // WebKit only pulls nodes that reach the destination: route through a silent gain
+  const mute = ac.createGain(); mute.gain.value = 0; an.connect(mute); mute.connect(ac.destination);
+  peak = 0; peakT = performance.now();
   buf = new Float32Array(an.fftSize);
   micOn = true; stopDemo();
   $('listen').classList.add('on'); $('listen').textContent = 'Слушаю';
@@ -418,8 +428,18 @@ function update(dt, now){
   frame++;
   if (micOn && an && !demo && now > ignoreUntil && frame % 2 === 0){
     an.getFloatTimeDomainData(buf);
+    if (ac.state !== 'running') ac.resume().catch(() => {});
     const r = yin(buf, ac.sampleRate);
+    peak = Math.max(peak, r.rms);
     if (r.f > 62 && r.f < 1100) feed(r.f, r.rms, now);
+  }
+  // diagnostics: tell the player what the mic hears when no note is found
+  if (micOn && !demo && now - peakT > 1500){
+    if (now - lastSig > 1500){
+      if (peak < .003) say('Не слышу звука. Поднесите телефон ближе к гитаре, микрофоном к розетке.', true);
+      else say('Звук слышу, ищу ноту. Дёрните одну открытую струну и дайте ей звучать.');
+    } else say('Подтягивайте или ослабляйте колок, пока линия не выпрямится.');
+    peak = 0; peakT = now;
   }
   if (demo && demo.cur){
     const {s, c0, t0, dur} = demo.cur, t = (now - t0) / 1000;
